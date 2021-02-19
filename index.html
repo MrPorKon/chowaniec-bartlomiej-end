@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="normalize.css" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script>
+        var strona = 1;
+
+        function chgpage(){
+            if(strona > 1)
+            strona -= 1;
+            show($("#searching").val());
+        }
+
+        function chgpage2(){
+            strona += 1;
+            show($("#searching").val());
+            var ilosc = $('#ilosc').val();
+            if(strona>ilosc/50){
+                strona=ilosc/50;
+            }
+        }
+
+        async function show(text) {   
+            var request = $.post("companies.json", function (data) {
+                var request = $.post("income.json", function (data2) {
+                    var zbior = [];
+                    var s=0;
+                    var tabela = "<table>";
+                    tabela += "<tr><th>ID</th><th>Nazwa firmy</th><th>Miasto</th><th>Przychód</th></tr>";
+                    for (i = 0; i < data.length; i++) {
+                        let income;
+                    for (j = 0; j < data2.length; j++) {
+                        if (data[i].id == data2[j].id) 
+                            income = data2[j].income;
+                        }
+                        
+                        let rekord = [data[i].id, data[i].name, data[i].city, income];
+
+                        if (text == "") {
+                            zbior.push(rekord);
+                        }
+                        else {
+                            let string = data[i].name;
+                            if (string.includes(text)){
+                                zbior.push(rekord);
+                                s=2;
+                            }
+                            else if(strona>1){
+                                strona=1;
+                            }
+                            else{
+                                tabela = "Brak rekordów";
+                            }
+                        }
+                    }
+                    
+                    $("#ilosc").attr("value", zbior.length);
+
+                    zbior.sort(function (a, b) { return parseInt(b[3]) - parseInt(a[3]) });
+
+                    if(strona==1){
+                        var min=-1;
+                        var max=min + 51;
+                    }
+                    else {
+                    min=(strona-1)*50-1;
+                    var max=min + 51;
+                    }
+
+                    var i=1;
+
+                    if(s==2){
+                        tabela = "<table>";
+                    tabela += "<tr><th>ID</th><th>Nazwa firmy</th><th>Miasto</th><th>Przychód</th></tr>";
+                    }
+
+                    zbior.forEach(function (rekord, index) {
+                        if(index > min && index < max){
+                            tabela += "<tr><td id='a1'>" + rekord[0] + "</td>";
+                            tabela += "<td id='a2'>" + rekord[1] + "</td>";
+                            tabela += "<td id='a3'>" + rekord[2] + "</td>";
+                            tabela += "<td id='a4'>" + rekord[3] + "</td></tr>";
+                            i++;
+                        }
+                    });
+
+                    tabela += "</table>";
+                    $("#tabela").html();
+                    $("#tabela").html(tabela);
+                    strona = Math.ceil(strona)
+                    if(strona==0){
+                        strona=1;
+                    }
+                    $("#strona").html(strona);
+
+                }, "json" );
+            }, "json" );
+        }
+
+        $(function () {
+        show("");
+    });
+
+    </script>
+    </head>
+    <body>
+
+    <div id="top1">
+        <b>Przychody firm</b>
+    </div>
+    <div id="top2"> 
+        <i>Wyszukaj firmę:</i><br>
+        <input type="text" id="searching" onkeyup="show($(this).val());" />
+    </div>
+        <input type="hidden" id="ilosc">
+
+
+    <div id="mainik"></div>
+        <div id="tabela"></div>
+        <div id="chgpage">
+            <button type="submit" id="pg" onclick="chgpage()">Poprzednia strona</button>
+            <div id="strona"></div>
+            <button type="submit" id="pg" onclick="chgpage2()">Następna strona</button>
+        </div>
+    </div>
+
+
+    <div id="bottom">
+        <p>Strona utworzona przez Bartłomieja Chowańca &copy;</p>
+    </div>
+
+    </body>
+</html>
